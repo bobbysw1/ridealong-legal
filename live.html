@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RideAlong live location</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head><body>
 <header><div class="wrap"><div class="brand">RideAlong</div><nav><a href="index.html">Home</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="support.html">Support</a></nav></div></header>
 <main><div class="card"><h1>Live location</h1><p class="updated" id="status">Checking this live-location link…</p><div id="map" style="height:330px;border-radius:14px;display:none"></div><p class="note">This is a location link shared by its owner. It is not monitored by RideAlong or emergency services. If someone needs urgent help, call 000.</p><p class="updated" id="updated"></p></div></main>
-<footer><div class="wrap">© <span id="y"></span> RideAlong · Australia</div></footer>
+<footer><div class="wrap">&copy; <span id="y"></span> A.C.N. 702 408 348 PTY LTD (ACN 702 408 348). RideAlong &middot; Australia</div></footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script>
 document.getElementById('y').textContent=new Date().getFullYear();
 const token=new URLSearchParams(location.search).get('token')||''; const status=document.getElementById('status'), updated=document.getElementById('updated'), mapEl=document.getElementById('map'); let map, marker;
