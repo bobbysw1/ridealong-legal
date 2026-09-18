@@ -1,0 +1,21 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>You're invited to RideAlong</title><link rel="stylesheet" href="style.css"></head><body>
+<header><div class="wrap"><div class="brand">RideAlong</div><nav><a href="index.html">Home</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="support.html">Support</a></nav></div></header>
+<main><div class="card">
+<h1>You've been invited to RideAlong</h1>
+<p class="updated">RideAlong is peer-to-peer carpooling for Far North Queensland. Drivers share the spare seats on trips they're already making, and riders share the cost.</p>
+<p id="codeline" style="display:none;">Your invite code: <strong id="code" style="font-family:ui-monospace,Menlo,monospace;font-size:1.3em;letter-spacing:.06em;"></strong></p>
+<p style="margin:28px 0;">
+  <a id="open" class="btn" href="#" style="display:inline-block;padding:14px 22px;border-radius:14px;background:#0f6e56;color:#fff;text-decoration:none;font-weight:600;">Open in RideAlong</a>
+</p>
+<h2>Don't have the app yet?</h2>
+<p><a href="https://apps.apple.com/app/id6809434560">Get RideAlong on the App Store</a>. When you create your account, enter the invite code above (or open this link again once it's installed and the code fills in for you).</p>
+</div></main>
+<footer><div class="wrap">&copy; <span id="y"></span> A.C.N. 702 408 348 PTY LTD (ACN 702 408 348). RideAlong &middot; Australia</div></footer>
+<script>
+  document.getElementById('y').textContent = new Date().getFullYear();
+  // Only letters and digits are ever used from the URL, so nothing else can reach the page or the app link.
+  var code = (new URLSearchParams(location.search).get('code') || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 12);
+  document.getElementById('open').setAttribute('href', code.length >= 4 ? 'ridealong://invite/' + code : 'ridealong://');
+  if (code.length >= 4) { document.getElementById('code').textContent = code; document.getElementById('codeline').style.display = 'block'; }
+</script>
+</body></html>
