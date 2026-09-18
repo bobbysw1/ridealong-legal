@@ -1,0 +1,23 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>A RideAlong trip</title><link rel="stylesheet" href="style.css"></head><body>
+<header><div class="wrap"><div class="brand">RideAlong</div><nav><a href="index.html">Home</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="support.html">Support</a></nav></div></header>
+<main><div class="card">
+<h1>You've been invited to a ride</h1>
+<p class="updated">RideAlong is peer-to-peer carpooling for Far North Queensland — share the cost of trips people are already making.</p>
+<p>Open this trip in the RideAlong app to see the route, driver and price, and to request a seat.</p>
+<p style="margin:28px 0;">
+  <a id="open" class="btn" href="#" style="display:inline-block;padding:14px 22px;border-radius:14px;background:#0f6e56;color:#fff;text-decoration:none;font-weight:600;">Open in RideAlong</a>
+</p>
+<h2>Don't have the app yet?</h2>
+<p><a id="store" href="https://apps.apple.com/app/id6809434560">Get RideAlong on the App Store</a>, then open this link again to jump straight to the trip.</p>
+<p class="updated" id="fallback"></p>
+</div></main>
+<footer><div class="wrap">© <span id="y"></span> RideAlong · Australia</div></footer>
+<script>
+  document.getElementById('y').textContent = new Date().getFullYear();
+  var params = new URLSearchParams(location.search);
+  var id = (params.get('id') || '').replace(/[^a-fA-F0-9-]/g, '');
+  var appLink = id ? 'ridealong://ride/' + id : 'ridealong://';
+  document.getElementById('open').setAttribute('href', appLink);
+  if (!id) { document.getElementById('fallback').textContent = 'This link is missing a trip reference — open the app and browse the Find tab instead.'; }
+</script>
+</body></html>
