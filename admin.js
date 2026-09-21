@@ -9,6 +9,10 @@ const root = document.getElementById("root");
 const TRUST_KEY = "ra_trusted_device";
 const trusted = () => { try { return localStorage.getItem(TRUST_KEY) === "1"; } catch { return false; } };
 const setTrust = (on) => { try { on ? localStorage.setItem(TRUST_KEY, "1") : localStorage.removeItem(TRUST_KEY); } catch {} };
+const THEME_KEY = "ra_theme"; // "auto" | "light" | "dark"
+function getTheme() { try { return localStorage.getItem(THEME_KEY) || "auto"; } catch { return "auto"; } }
+function applyTheme(t) { try { localStorage.setItem(THEME_KEY, t); } catch {} if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t); }
+applyTheme(getTheme());
 
 /* ---------- DOM helper ---------- */
 function el(tag, props, ...kids) {
@@ -206,6 +210,11 @@ const NAV = [
   ["g:Records"], ["bookings", "Bookings", "doc"], ["members", "Members", "users"], ["chats", "Chats", "message"], ["money", "Money", "card"], ["payouts", "Payouts", "dollar", "payoutQ"], ["activity", "Activity", "activity"], ["system", "System health", "server"],
 ];
 const TITLES = { overview: ["Overview", "What needs you right now."], bookings: ["Bookings", "Look up any ride, booking or member."], payouts: ["Payouts", "Driver payouts and payout-account readiness."], refunds: ["Refunds", "Nothing is refunded until you approve it."], verify: ["Verifications", "ID and vehicle documents awaiting review."], support: ["Support", "Messages from members."], safety: ["Safety", "Reports and suspension appeals."], members: ["Members", ""], chats: ["Chats", "Ride conversations, exactly as members see them."], money: ["Money", "Card payments and driver payouts."], activity: ["Activity", "Logins, staff changes and app events."], system: ["System health", "Automatic overnight checks."] };
+function themeToggle() {
+  const cur = getTheme();
+  const opt = (v, label) => el("button", { type: "button", "aria-pressed": cur === v ? "true" : "false", title: `${label} theme`, onclick: () => { applyTheme(v); renderShell(); } }, label);
+  return el("div", { class: "theme-toggle", role: "group", "aria-label": "Theme" }, opt("auto", "Auto"), opt("light", "Light"), opt("dark", "Dark"));
+}
 function renderShell() {
   const c = counts();
   const nav = el("nav", { class: "nav", "aria-label": "Sections" }, NAV.map((row) => {
@@ -214,7 +223,7 @@ function renderShell() {
     return el("button", { type: "button", "aria-current": view === key ? "page" : false, onclick: () => { view = key; chatSel = null; window.scrollTo(0, 0); renderShell(); } }, ic(icon), el("span", {}, label), cnt && c[cnt] ? el("span", { class: "badge" }, c[cnt]) : null);
   }));
   const side = el("aside", { class: "side" }, el("div", { class: "brand-row" }, el("div", { class: "logo" }, "R"), "RideAlong Staff"), nav,
-    el("div", { class: "side-foot" }, avatar(meEmail || "Staff", true), el("div", { class: "who" }, el("div", { class: "n" }, meEmail || "Staff"), el("button", { class: "link", type: "button", onclick: () => signOut() }, "Sign out"))));
+    el("div", { class: "side-foot" }, avatar(meEmail || "Staff", true), el("div", { class: "who" }, el("div", { class: "n" }, meEmail || "Staff"), el("button", { class: "link", type: "button", onclick: () => signOut() }, "Sign out")), themeToggle()));
   const [title, sub] = TITLES[view] || [view, ""];
   const tools = el("div", { class: "tools" }, view === "members" ? memberSearch() : (view === "bookings" ? bookingSearch() : null),
     el("button", { class: "btn small", type: "button", onclick: async () => { try { await reload(); toast("Refreshed"); } catch (e) { toast(e.message, "bad"); } } }, ic("refresh"), "Refresh"));
