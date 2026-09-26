@@ -19,5 +19,13 @@
   var appLink = id ? 'ridealong://ride/' + id : 'ridealong://';
   document.getElementById('open').setAttribute('href', appLink);
   if (!id) { document.getElementById('fallback').textContent = 'This link is missing a trip reference — open the app and browse the Find tab instead.'; }
+  // Android: Chrome only opens an installed app reliably through an intent link, which also falls back
+  // to Google Play when RideAlong isn't installed. iPhone keeps the ridealong:// link and the App Store.
+  var play = 'https://play.google.com/store/apps/details?id=au.com.ridealong.app';
+  if (/Android/i.test(navigator.userAgent)) {
+    var store = document.getElementById('store');
+    store.setAttribute('href', play); store.textContent = 'Get RideAlong on Google Play';
+    document.getElementById('open').setAttribute('href', 'intent://' + (id ? 'ride/' + id : '') + '#Intent;scheme=ridealong;package=au.com.ridealong.app;S.browser_fallback_url=' + encodeURIComponent(play) + ';end');
+  }
 </script>
 </body></html>
