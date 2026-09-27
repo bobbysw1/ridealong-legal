@@ -118,7 +118,22 @@ const nameOf = (id) => P.get(id)?.display_name || (AU.get(id)?.email) || "Unknow
 const rideOf = (bid) => { const r = B.get(bid)?.rides; return Array.isArray(r) ? r[0] : r; };
 const routeOf = (bid) => { const r = rideOf(bid); return r ? `${r.pickup_name} → ${r.dropoff_name}` : "Unknown trip"; };
 const tripLine = (bid) => { const r = rideOf(bid); return r ? `${routeOf(bid)} · ${when(r.departure_at)}` : "Unknown trip"; };
-async function reload() { D = await api("admin-dashboard", "GET"); index(); renderShell(); }
+async function reload() {
+  D = await api("admin-dashboard", "GET");
+  // Site-wide fuel prices (public table) used for every driver's fuel estimate.
+  try { D.fuel = (await sb.from("fuel_prices").select("*").eq("region", "fnq").maybeSingle()).data; } catch { D.fuel = null; }
+  index(); renderShell();
+}
+async function editFuel() {
+  const f = D.fuel || {};
+  const v = await ask({ title: "Fuel prices", text: "Cairns-area bowser prices, per litre. Every driver's fuel estimate uses these straight away. A price you set here wins over the automatic daily update for 7 days.",
+    fields: [{ key: "u", label: `Unleaded 91 ($ per litre)`, placeholder: f.unleaded_cents_per_litre ? (f.unleaded_cents_per_litre / 100).toFixed(2) : "2.39", required: true },
+             { key: "d", label: `Diesel ($ per litre)`, placeholder: f.diesel_cents_per_litre ? (f.diesel_cents_per_litre / 100).toFixed(2) : "2.85", required: true }], confirm: "Save prices" });
+  if (!v) return;
+  const u = parseFloat(v.u.replace("$", "")), d = parseFloat(v.d.replace("$", ""));
+  if (!(u >= 1 && u <= 5 && d >= 1 && d <= 5)) { toast("Enter prices between $1.00 and $5.00 per litre, like 2.39.", "bad"); return; }
+  act({ action: "fuel_prices", unleadedCents: Math.round(u * 1000) / 10, dieselCents: Math.round(d * 1000) / 10 }, "Fuel prices updated for everyone");
+}
 
 /* ---------- auth ---------- */
 function authShell(...content) { root.replaceChildren(el("div", { class: "auth" }, el("div", { class: "auth-card" }, el("div", { class: "brand-row" }, el("div", { class: "logo" }, "R"), "RideAlong Staff"), content))); }
@@ -260,6 +275,12 @@ function overview() {
         el("dt", {}, "Owed to drivers"), el("dd", { class: "num" }, money(sum(taken, "driver_amount_cents"))),
         el("dt", {}, "Payouts sent"), el("dd", { class: "num" }, `${paidOut.length} · ${money(sum(paidOut, "amount_cents"))}`),
         el("dt", {}, "Refunded"), el("dd", { class: "num" }, String(recent.filter((p) => p.status === "refunded").length)))),
+      el("div", { class: "card pad" }, el("h2", {}, "Fuel prices"), el("dl", { class: "kv" },
+        el("dt", {}, "Unleaded 91"), el("dd", { class: "num" }, D.fuel ? `$${(D.fuel.unleaded_cents_per_litre / 100).toFixed(2)}/L` : "—"),
+        el("dt", {}, "Diesel"), el("dd", { class: "num" }, D.fuel ? `$${(D.fuel.diesel_cents_per_litre / 100).toFixed(2)}/L` : "—"),
+        el("dt", {}, "Updated"), el("dd", {}, D.fuel ? ago(D.fuel.updated_at) : "—")),
+        el("p", { class: "sub", style: "margin:8px 0" }, D.fuel ? D.fuel.source : "Not set"),
+        el("button", { class: "btn small", type: "button", onclick: editFuel }, "Change prices")),
       el("div", { class: "card pad" }, el("h2", {}, "System health"), health.map(([t, m]) => el("p", { style: "margin:8px 0" }, pill(t === "good" ? "OK" : t === "warn" ? "Check" : "Act", t), " ", m)),
         el("button", { class: "btn small", type: "button", style: "margin-top:8px", onclick: goView("system") }, "Details"))));
 }
