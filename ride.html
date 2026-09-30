@@ -1,8 +1,8 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>A RideAlong trip</title><link rel="stylesheet" href="style.css"></head><body>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>A RideAlong trip</title><link rel="stylesheet" href="style.css"><meta name="description" content="Open a shared RideAlong trip to see the route, driver and price, and request a seat."><link rel="canonical" href="https://bobbysw1.github.io/ridealong-legal/ride.html"><meta name="theme-color" content="#05619e"><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="icon" href="favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="manifest" href="site.webmanifest"><meta name="twitter:card" content="summary_large_image"><meta property="og:site_name" content="RideAlong"><meta property="og:type" content="website"><meta property="og:locale" content="en_AU"><meta property="og:image" content="https://bobbysw1.github.io/ridealong-legal/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:image" content="https://bobbysw1.github.io/ridealong-legal/og.png"><meta property="og:title" content="A shared trip on RideAlong"><meta property="og:description" content="Open a shared RideAlong trip to see the route, driver and price, and request a seat."><meta property="og:url" content="https://bobbysw1.github.io/ridealong-legal/ride.html"><meta name="twitter:title" content="A shared trip on RideAlong"><meta name="twitter:description" content="Open a shared RideAlong trip to see the route, driver and price, and request a seat."></head><body>
 <header><div class="wrap"><div class="brand">RideAlong</div><nav><a href="index.html">Home</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="support.html">Support</a></nav></div></header>
 <main><div class="card">
 <h1>You've been invited to a ride</h1>
-<p class="updated">RideAlong is peer-to-peer carpooling for Far North Queensland — share the cost of trips people are already making.</p>
+<p class="updated">RideAlong is peer-to-peer carpooling for Far North Queensland, sharing the cost of trips people are already making.</p>
 <p>Open this trip in the RideAlong app to see the route, driver and price, and to request a seat.</p>
 <p style="margin:28px 0;">
   <a id="open" class="btn" href="#" style="display:inline-block;padding:14px 22px;border-radius:14px;background:#0f6e56;color:#fff;text-decoration:none;font-weight:600;">Open in RideAlong</a>
@@ -18,7 +18,7 @@
   var id = (params.get('id') || '').replace(/[^a-fA-F0-9-]/g, '');
   var appLink = id ? 'ridealong://ride/' + id : 'ridealong://';
   document.getElementById('open').setAttribute('href', appLink);
-  if (!id) { document.getElementById('fallback').textContent = 'This link is missing a trip reference — open the app and browse the Find tab instead.'; }
+  if (!id) { document.getElementById('fallback').textContent = 'This link is missing a trip reference. Open the app and browse the Find tab instead.'; }
   // Android: Chrome only opens an installed app reliably through an intent link, which also falls back
   // to Google Play when RideAlong isn't installed. iPhone keeps the ridealong:// link and the App Store.
   var play = 'https://play.google.com/store/apps/details?id=au.com.ridealong.app';
