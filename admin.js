@@ -107,11 +107,12 @@ async function api(path, method, body) {
 
 /* ---------- state ---------- */
 let D = null, view = "overview", memberQuery = "", actFilter = "all", chatSel = null, drawerId = null, meEmail = "";
-let P = new Map(), B = new Map(), PAYBK = new Map(), AU = new Map();
+let P = new Map(), B = new Map(), PAYBK = new Map(), AU = new Map(), MS = new Map();
 function index() {
   P = new Map(D.profiles.map((x) => [x.id, x]));
   B = new Map(D.bookings.map((x) => [x.id, x]));
   AU = new Map((D.authUsers || []).map((u) => [u.id, u]));
+  MS = new Map((D.memberStats || []).map((m) => [m.id, m]));
   PAYBK = new Map(); for (const p of D.payments) if (!PAYBK.has(p.booking_id) || p.status === "captured") PAYBK.set(p.booking_id, p);
 }
 const nameOf = (id) => P.get(id)?.display_name || (AU.get(id)?.email) || "Unknown member";
@@ -357,14 +358,16 @@ function memberSearch() { const s = el("input", { type: "search", placeholder: "
 function drawMembers(host) {
   const q = memberQuery.trim().toLowerCase();
   const rows = D.profiles.filter((p) => { const au = AU.get(p.id); return !q || p.display_name.toLowerCase().includes(q) || (au?.email || "").toLowerCase().includes(q); }).slice(0, 300);
-  host.replaceChildren(el("table", {}, el("thead", {}, el("tr", {}, ["Member", "Identity", "Vehicle", "Account", "Last sign-in", ""].map((h) => el("th", {}, h)))),
-    el("tbody", {}, rows.length ? rows.map((p) => { const au = AU.get(p.id) || {};
-      return el("tr", {}, el("td", {}, el("button", { class: "who-row", style: "border:0;background:none;cursor:pointer;padding:0", onclick: () => openMember(p.id) }, avatar(p.display_name, true), el("div", { style: "text-align:left" }, el("div", { class: "who", style: "font-size:13.5px" }, p.display_name), el("div", { class: "sub" }, au.email || "—")))),
+  host.replaceChildren(el("table", {}, el("thead", {}, el("tr", {}, ["Member", "Identity", "Vehicle", "Account", "Trips", "Spent", "Earned", "Invited", "Last active", ""].map((h) => el("th", {}, h)))),
+    el("tbody", {}, rows.length ? rows.map((p) => { const au = AU.get(p.id) || {}; const ms = MS.get(p.id);
+      return el("tr", {}, el("td", {}, el("button", { class: "who-row", style: "border:0;background:none;cursor:pointer;padding:0;color:inherit;font:inherit", onclick: () => openMember(p.id) }, avatar(p.display_name, true), el("div", { style: "text-align:left" }, el("div", { class: "who", style: "font-size:13.5px" }, p.display_name), el("div", { class: "sub" }, au.email || "—")))),
         el("td", {}, statusPill(p.identity_status)), el("td", {}, p.vehicle_review_status ? statusPill(p.vehicle_review_status) : el("span", { class: "faint" }, "—")),
-        el("td", {}, statusPill(p.account_status || "active")), el("td", { class: "sub" }, au.last_sign_in_at ? ago(au.last_sign_in_at) : "never"),
-        el("td", { class: "r" }, el("button", { class: "btn small", type: "button", onclick: () => openMember(p.id) }, "View"))); }) : el("tr", {}, el("td", { colspan: "6", class: "empty" }, "No members match.")))));
+        el("td", {}, statusPill(p.account_status || "active")),
+        el("td", { class: "num" }, ms ? `${ms.rider_trips} / ${ms.driver_trips}` : "—"), el("td", { class: "num" }, ms ? money(ms.spent_cents) : "—"), el("td", { class: "num" }, ms ? money(ms.earned_cents) : "—"), el("td", { class: "num" }, ms ? String(ms.invited) : "—"),
+        el("td", { class: "sub" }, (ms?.last_active_at || au.last_sign_in_at) ? ago(ms?.last_active_at || au.last_sign_in_at) : "never"),
+        el("td", { class: "r" }, el("button", { class: "btn small", type: "button", onclick: () => openMember(p.id) }, "View"))); }) : el("tr", {}, el("td", { colspan: "10", class: "empty" }, "No members match.")))));
 }
-function members() { const host = el("div", { class: "table-wrap", id: "mtable" }); drawMembers(host); return el("div", {}, el("div", { class: "sub", style: "margin-bottom:12px" }, `${D.profiles.length} accounts`), host, drawerId ? memberDrawer() : null); }
+function members() { const host = el("div", { class: "table-wrap", id: "mtable" }); drawMembers(host); return el("div", {}, el("div", { class: "sub", style: "margin-bottom:12px" }, `${D.profiles.length} accounts · Trips shown as rider / driver`), host, drawerId ? memberDrawer() : null); }
 function openMember(id) { drawerId = id; renderShell(); }
 function closeDrawer() { drawerId = null; renderShell(); }
 function memberDrawer() {
@@ -378,13 +381,14 @@ function memberDrawer() {
       el("div", { class: "section-title" }, "Account"),
       el("dl", { class: "kv" }, el("dt", {}, "Identity"), el("dd", {}, statusPill(p.identity_status)), el("dt", {}, "Vehicle"), el("dd", {}, p.vehicle_review_status ? statusPill(p.vehicle_review_status) : "—"), el("dt", {}, "Status"), el("dd", {}, statusPill(p.account_status || "active")),
         el("dt", {}, "Email confirmed"), el("dd", {}, au.email_confirmed ? "Yes" : "No"), el("dt", {}, "Joined"), el("dd", {}, dateOnly(p.created_at)), el("dt", {}, "Last sign-in"), el("dd", {}, when(au.last_sign_in_at)),
-        el("dt", {}, "Bookings"), el("dd", {}, String(theirBookings.length)), el("dt", {}, "Spent (captured)"), el("dd", { class: "num" }, money(spent))),
+        MS.has(drawerId) ? null : [el("dt", {}, "Bookings"), el("dd", {}, String(theirBookings.length)), el("dt", {}, "Spent (captured)"), el("dd", { class: "num" }, money(spent))]),
       el("div", { class: "section-title" }, "Trust signals"),
       (function(){ const t = trustSignals(p.id); return el("dl", { class: "kv" },
         el("dt", {}, "Rating"), el("dd", {}, t.avg == null ? "No reviews yet" : `${t.avg.toFixed(1)} ★ (${t.reviewCount})`),
         el("dt", {}, "Completed trips"), el("dd", {}, String(t.completed)),
         el("dt", {}, "Cancellations"), el("dd", {}, String(t.cancelled)),
         el("dt", {}, "Reports against"), el("dd", {}, t.reportsAgainst ? pill(String(t.reportsAgainst), "bad") : "0")); })(),
+      memberStatsSections(drawerId),
       el("div", { class: "section-title" }, "Documents"),
       el("div", { class: "actions" }, el("button", { class: "btn", type: "button", disabled: !p.identity_document_path, onclick: () => openDoc(p.id, "identity") }, ic("doc"), "Identity"), el("button", { class: "btn", type: "button", disabled: !p.vehicle_document_path, onclick: () => openDoc(p.id, "vehicle") }, ic("doc"), "Vehicle")),
       el("div", { class: "section-title" }, "Actions"),
@@ -394,6 +398,29 @@ function memberDrawer() {
         el("button", { class: "btn", type: "button", onclick: async () => { await act({ action: "women_only_eligibility", profileId: p.id, eligible: !p.women_only_eligible }, "Updated"); } }, p.women_only_eligible ? "Remove women-only" : "Allow women-only"))));
 }
 
+
+/* ---------- member stats (staff_member_stats / staff_member_journeys) ---------- */
+const FUEL = { unleaded: "Unleaded", diesel: "Diesel", hybrid: "Hybrid", electric: "Electric" };
+function memberStatsSections(id) {
+  const m = MS.get(id);
+  if (!m) return el("div", { class: "sub", style: "margin-top:12px" }, "Member stats aren’t available. Refresh, or check System health if this persists.");
+  const kv = (pairs) => el("dl", { class: "kv" }, pairs.flatMap(([k, v]) => [el("dt", {}, k), el("dd", { class: typeof v === "string" && v.startsWith("$") ? "num" : "" }, v)]));
+  const journeys = (D.journeys || []).filter((j) => j.rider_id === id || j.driver_id === id).slice(0, 40);
+  return [
+    el("div", { class: "section-title" }, "As a rider"),
+    kv([["Bookings", String(m.rider_bookings)], ["Completed trips", String(m.rider_trips)], ["Cancelled", String(m.rider_cancellations)], ["Paid driver directly", String(m.rider_pay_direct)], ["Paid in app", String(m.rider_pay_app)], ["Spent (captured)", money(m.spent_cents)]]),
+    el("div", { class: "section-title" }, "As a driver"),
+    kv([["Vehicle", m.vehicle ? `${m.vehicle}${m.vehicle_fuel ? ` · ${FUEL[m.vehicle_fuel] || m.vehicle_fuel}` : ""}` : "—"], ["Rides posted", String(m.rides_posted)], ["Completed trips", String(m.driver_trips)], ["Riders paid directly", String(m.driver_pay_direct)], ["Riders paid in app", String(m.driver_pay_app)], ["Earned", money(m.earned_cents)], ["Available now", money(m.available_cents)], ["Paid out", money(m.paid_out_cents)]]),
+    el("div", { class: "section-title" }, "Invites"),
+    kv([["Their code", m.invite_code ? el("span", { style: "font-family:ui-monospace,monospace" }, m.invite_code) : "Not created yet"], ["Friends joined", String(m.invited)], ["Joined with code", m.joined_with_code ? el("span", { style: "font-family:ui-monospace,monospace" }, m.joined_with_code) : "—"], ["Credit earned", money(m.credit_earned_cents)], ["Credit unspent", money(m.credit_unspent_cents)], ["Credit used", money(m.credit_used_cents)]]),
+    el("div", { class: "section-title" }, `Journeys${journeys.length ? ` (${journeys.length})` : ""}`),
+    journeys.length ? el("div", { class: "feed" }, journeys.map((j) => el("div", { class: "event" }, el("div", { class: "ic" }, ic(j.driver_id === id ? "card" : "users")),
+      el("div", { class: "txt" }, el("div", { class: "t" }, `${j.pickup_name} → ${j.dropoff_name}`),
+        el("div", { class: "d" }, [j.driver_id === id ? `Driving · rider ${nameOf(j.rider_id)}` : `Riding · driver ${nameOf(j.driver_id)}`, `${j.seats} seat${j.seats === 1 ? "" : "s"}`, j.payment_mode === "direct" ? "Paid driver directly" : "Paid in app",
+          j.rider_total_cents ? money(j.rider_total_cents) : null, j.referral_credit_cents ? `−${money(j.referral_credit_cents)} invite credit` : null].filter(Boolean).join(" · ")),
+        el("div", { class: "d" }, j.completed ? pill("completed", "good") : statusPill(j.status), " ", dateOnly(j.departure_at)))))) : el("div", { class: "sub" }, "No journeys yet."),
+  ];
+}
 
 /* ---------- trust signals ---------- */
 function trustSignals(memberId) {
