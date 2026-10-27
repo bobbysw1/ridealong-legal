@@ -15,3 +15,6 @@ h2 { font-size:19px; margin:28px 0 6px; color:var(--ocean); }
 a { color:var(--ocean); }
 footer { text-align:center; color:var(--muted); font-size:13px; padding:24px; }
 .note { background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:12px 14px; font-size:14px; color:#7c3a12; }
+
+.card ul { padding-left: 1.3em; }
+.card li { margin: .35em 0; }
